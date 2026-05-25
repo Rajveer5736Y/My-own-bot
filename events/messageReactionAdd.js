@@ -39,10 +39,7 @@ module.exports = (client) => {
                 data.messageId
             ) return;
 
-            if (
-                reaction.emoji.name !== "✅"
-            ) return;
-
+            if (reaction.emoji.id !== data.emojiId) return;
             const guild =
                 reaction.message.guild;
 
