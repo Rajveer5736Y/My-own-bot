@@ -15,7 +15,7 @@ const client = new Client({
         GatewayIntentBits.GuildMessageReactions
     ]
 });
-
+console.log("DATABASE URL EXISTS:", !!process.env.DATABASE_URL);
 client.commands = new Collection();
 
 const commandFiles = fs
