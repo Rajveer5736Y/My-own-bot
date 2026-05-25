@@ -1,4 +1,4 @@
-const pool = require("../database");
+execute pool = require("../database");
 const {
     PermissionsBitField
 } = require("discord.js");
@@ -6,7 +6,7 @@ const {
 module.exports = {
     name: "verification",
 
-    async execute(message, args) {
+    async execut(client, messagege, args) {
 
         if (
             !message.member.permissions.has(
