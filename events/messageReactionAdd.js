@@ -1,16 +1,3 @@
-client.on("messageReactionAdd", async (reaction, user) => {
-    console.log("Reaction Event Fired");
-    console.log("User:", user.tag);
-
-    if (reaction.partial) {
-        await reaction.fetch();
-    }
-
-    if (user.bot) return;
-
-    console.log("Message ID:", reaction.message.id);
-    console.log("Stored ID:", client.verificationData?.messageId);
-});
 module.exports = (client) => {
 
     client.on("messageReactionAdd", async (reaction, user) => {
