@@ -78,6 +78,8 @@ Emoji: ${data.emoji_name}`
 
             const role =
                 message.mentions.roles.first();
+            const everyone =
+                message.guild.roles.everyone;
 
             const emoji = args[3];
 
