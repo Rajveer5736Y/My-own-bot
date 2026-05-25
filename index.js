@@ -30,6 +30,20 @@ for (const file of commandFiles) {
 const eventFiles = fs
     .readdirSync("./events")
     .filter(file => file.endsWith(".js"));
+const pool = require("./database");
+
+(async () => {
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS verification (
+            guild_id TEXT PRIMARY KEY,
+            channel_id TEXT NOT NULL,
+            role_id TEXT NOT NULL,
+            message_id TEXT NOT NULL,
+            emoji_id TEXT,
+            emoji_name TEXT NOT NULL
+        )
+    `);
+})();
 
 for (const file of eventFiles) {
     const event = require(`./events/${file}`);
