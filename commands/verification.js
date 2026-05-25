@@ -86,6 +86,42 @@ Emoji: ${data.emoji_name}`
                     "Usage: !verification setup #channel @role emoji"
                 );
             }
+            for (const [, guildChannel] of message.guild.channels.cache) {
+
+    if (guildChannel.id === channel.id)
+        continue;
+
+    try {
+
+        await guildChannel.permissionOverwrites.edit(
+            everyone,
+            {
+                ViewChannel: false
+            }
+        );
+
+        await guildChannel.permissionOverwrites.edit(
+            role,
+            {
+                ViewChannel: true
+            }
+        );
+
+    } catch (err) {
+        console.log(
+            `Failed to edit ${guildChannel.name}:`,
+            err.message
+        );
+    }
+}
+
+await channel.permissionOverwrites.edit(
+    everyone,
+    {
+        ViewChannel: true,
+        SendMessages: false
+    }
+);
 
             const verifyMessage =
                 await channel.send({
