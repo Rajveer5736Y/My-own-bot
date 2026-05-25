@@ -35,5 +35,5 @@ for (const file of eventFiles) {
     const event = require(`./events/${file}`);
     event(client);
 }
-
+console.log("TOKEN EXISTS:", !!process.env.TOKEN);
 client.login(process.env.TOKEN);
