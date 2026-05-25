@@ -1,12 +1,12 @@
+const pool = require("../database");
 const {
-    PermissionsBitField,
-    ChannelType
+    PermissionsBitField
 } = require("discord.js");
 
 module.exports = {
     name: "verification",
 
-    async execute(message, args, client) {
+    async execute(message, args) {
 
         if (
             !message.member.permissions.has(
@@ -14,76 +14,229 @@ module.exports = {
             )
         ) {
             return message.reply(
-                "❌ You must be an administrator."
+                "❌ Administrator permission required."
             );
         }
 
-        const channel =
-            message.mentions.channels.first();
+        const subcommand =
+            args[0]?.toLowerCase();
 
-        const role =
-            message.mentions.roles.first();
-
-        if (!channel || !role) {
+        if (!subcommand) {
             return message.reply(
-                "Usage: !verification #channel @role"
+                "Usage: setup, refresh, status, disable"
             );
         }
 
-        const everyone =
-            message.guild.roles.everyone;
+        // ---------------- STATUS ----------------
 
-        // Hide all channels except verification channel
-        for (const [, guildChannel] of message.guild.channels.cache) {
+        if (subcommand === "status") {
 
-            if (guildChannel.id === channel.id)
-                continue;
-
-            try {
-
-                await guildChannel.permissionOverwrites.edit(
-                    everyone,
-                    {
-                        ViewChannel: false
-                    }
+            const result =
+                await pool.query(
+                    "SELECT * FROM verification WHERE guild_id = $1",
+                    [message.guild.id]
                 );
 
-                await guildChannel.permissionOverwrites.edit(
-                    role,
-                    {
-                        ViewChannel: true
-                    }
+            if (!result.rows.length) {
+                return message.reply(
+                    "❌ Verification is not configured."
                 );
-
-            } catch (err) {
-                console.error(err);
             }
+
+            const data = result.rows[0];
+
+            return message.reply({
+                content:
+`✅ Verification Status
+
+Channel: <#${data.channel_id}>
+Role: <@&${data.role_id}>
+Message ID: ${data.message_id}
+Emoji: ${data.emoji_name}`
+            });
         }
 
-        await channel.permissionOverwrites.edit(
-            everyone,
-            {
-                ViewChannel: true,
-                SendMessages: false
+        // ---------------- DISABLE ----------------
+
+        if (subcommand === "disable") {
+
+            await pool.query(
+                "DELETE FROM verification WHERE guild_id = $1",
+                [message.guild.id]
+            );
+
+            return message.reply(
+                "✅ Verification disabled."
+            );
+        }
+
+        // ---------------- REFRESH ----------------
+
+        if (subcommand === "refresh") {
+
+            const result =
+                await pool.query(
+                    "SELECT * FROM verification WHERE guild_id = $1",
+                    [message.guild.id]
+                );
+
+            if (!result.rows.length) {
+                return message.reply(
+                    "❌ Verification not configured."
+                );
             }
-        );
 
-        const verifyMsg =
-            await channel.send({
-                content:
-                    "✅ **React below to verify and gain access to the server.**"
-            });
+            const data = result.rows[0];
 
-        await verifyMsg.react("✅");
+            const verifyChannel =
+                message.guild.channels.cache.get(
+                    data.channel_id
+                );
 
-        client.verificationData = {
-            guildId: message.guild.id,
-            messageId: verifyMsg.id,
-            roleId: role.id
-        };
+            const role =
+                message.guild.roles.cache.get(
+                    data.role_id
+                );
 
-        message.reply(
-            "✅ Verification system created."
-        );
+            const everyone =
+                message.guild.roles.everyone;
+
+            for (const [, channel] of message.guild.channels.cache) {
+
+                if (channel.id === verifyChannel.id)
+                    continue;
+
+                try {
+
+                    await channel.permissionOverwrites.edit(
+                        everyone,
+                        {
+                            ViewChannel: false
+                        }
+                    );
+
+                    await channel.permissionOverwrites.edit(
+                        role,
+                        {
+                            ViewChannel: true
+                        }
+                    );
+
+                } catch {}
+            }
+
+            await verifyChannel.permissionOverwrites.edit(
+                everyone,
+                {
+                    ViewChannel: true
+                }
+            );
+
+            return message.reply(
+                "✅ Verification refreshed."
+            );
+        }
+
+        // ---------------- SETUP ----------------
+
+        if (subcommand === "setup") {
+
+            const channel =
+                message.mentions.channels.first();
+
+            const role =
+                message.mentions.roles.first();
+
+            const emoji = args[3];
+
+            if (!channel || !role || !emoji) {
+                return message.reply(
+                    "Usage: !verification setup #channel @role emoji"
+                );
+            }
+
+            const everyone =
+                message.guild.roles.everyone;
+
+            for (const [, guildChannel] of message.guild.channels.cache) {
+
+                if (
+                    guildChannel.id === channel.id
+                ) continue;
+
+                try {
+
+                    await guildChannel.permissionOverwrites.edit(
+                        everyone,
+                        {
+                            ViewChannel: false
+                        }
+                    );
+
+                    await guildChannel.permissionOverwrites.edit(
+                        role,
+                        {
+                            ViewChannel: true
+                        }
+                    );
+
+                } catch {}
+            }
+
+            await channel.permissionOverwrites.edit(
+                everyone,
+                {
+                    ViewChannel: true,
+                    SendMessages: false
+                }
+            );
+
+            const verifyMessage =
+                await channel.send({
+                    content:
+                        "✅ React below to verify and gain access."
+                });
+
+            await verifyMessage.react(emoji);
+
+            const emojiId =
+                emoji.match(/\d+/)?.[0] || null;
+
+            await pool.query(
+                `
+                INSERT INTO verification
+                (
+                    guild_id,
+                    channel_id,
+                    role_id,
+                    message_id,
+                    emoji_id,
+                    emoji_name
+                )
+                VALUES
+                ($1,$2,$3,$4,$5,$6)
+                ON CONFLICT (guild_id)
+                DO UPDATE SET
+                    channel_id = EXCLUDED.channel_id,
+                    role_id = EXCLUDED.role_id,
+                    message_id = EXCLUDED.message_id,
+                    emoji_id = EXCLUDED.emoji_id,
+                    emoji_name = EXCLUDED.emoji_name
+                `,
+                [
+                    message.guild.id,
+                    channel.id,
+                    role.id,
+                    verifyMessage.id,
+                    emojiId,
+                    emoji
+                ]
+            );
+
+            return message.reply(
+                "✅ Verification configured."
+            );
+        }
+
     }
 };
