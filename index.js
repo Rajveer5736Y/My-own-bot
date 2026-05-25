@@ -45,6 +45,8 @@ const pool = require("./database");
     `);
 })();
 
+
+
 for (const file of eventFiles) {
     const event = require(`./events/${file}`);
     event(client);
