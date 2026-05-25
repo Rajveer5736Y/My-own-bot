@@ -232,7 +232,14 @@ Emoji: ${data.emoji_name}`
                     emoji
                 ]
             );
-
+            client.verificationData = {
+              guild_id: message.guild.id,
+              channel_id: channel.id,
+              role_id: role.id,
+              message_id: verificationMessage.id,
+              emoji_id: emoji.id || null,
+              emoji_name: emoji.name
+             };
             return message.reply(
                 "✅ Verification configured."
             );
