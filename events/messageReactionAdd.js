@@ -25,7 +25,8 @@ module.exports = (client) => {
                 reaction.message.id !==
                 data.messageId
             ) return;
-
+            console.log("Reacted emoji ID:", reaction.emoji.id);
+            console.log("Expected emoji ID:", data.emoji_id);
             if (reaction.emoji.id !== data.emojiId) return;
             const guild =
                 reaction.message.guild;
