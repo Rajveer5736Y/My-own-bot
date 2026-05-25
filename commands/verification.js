@@ -90,7 +90,7 @@ Emoji: ${data.emoji_name}`
             const verifyMessage =
                 await channel.send({
                     content:
-                        "✅ React below to verify and gain access."
+                        " React below to verify and gain access."
                 });
 
             await verifyMessage.react(emoji);
