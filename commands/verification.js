@@ -1,4 +1,4 @@
-execut pool = require("../database");
+const pool = require("../database");
 const {
     PermissionsBitField
 } = require("discord.js");
@@ -6,7 +6,7 @@ const {
 module.exports = {
     name: "verification",
 
-    async execute(client, messagege, args) {
+    async execute(message, args) {
 
         if (
             !message.member.permissions.has(
@@ -23,7 +23,7 @@ module.exports = {
 
         if (!subcommand) {
             return message.reply(
-                "Usage: setup, refresh, status, disable"
+                "Usage: !verification setup #channel @role emoji"
             );
         }
 
@@ -45,15 +45,14 @@ module.exports = {
 
             const data = result.rows[0];
 
-            return message.reply({
-                content:
-`✅ Verification Status
+            return message.reply(
+                `✅ Verification Status
 
 Channel: <#${data.channel_id}>
 Role: <@&${data.role_id}>
 Message ID: ${data.message_id}
 Emoji: ${data.emoji_name}`
-            });
+            );
         }
 
         // ---------------- DISABLE ----------------
@@ -67,73 +66,6 @@ Emoji: ${data.emoji_name}`
 
             return message.reply(
                 "✅ Verification disabled."
-            );
-        }
-
-        // ---------------- REFRESH ----------------
-
-        if (subcommand === "refresh") {
-
-            const result =
-                await pool.query(
-                    "SELECT * FROM verification WHERE guild_id = $1",
-                    [message.guild.id]
-                );
-
-            if (!result.rows.length) {
-                return message.reply(
-                    "❌ Verification not configured."
-                );
-            }
-
-            const data = result.rows[0];
-
-            const verifyChannel =
-                message.guild.channels.cache.get(
-                    data.channel_id
-                );
-
-            const role =
-                message.guild.roles.cache.get(
-                    data.role_id
-                );
-
-            const everyone =
-                message.guild.roles.everyone;
-
-            for (const [, channel] of message.guild.channels.cache) {
-
-                if (channel.id === verifyChannel.id)
-                    continue;
-
-                try {
-
-                    await channel.permissionOverwrites.edit(
-                        everyone,
-                        {
-                            ViewChannel: false
-                        }
-                    );
-
-                    await channel.permissionOverwrites.edit(
-                        role,
-                        {
-                            ViewChannel: true
-                        }
-                    );
-
-                } catch {}
-            }
-
-            await verifyChannel.permissionOverwrites.edit(
-                everyone,
-                {
-                    ViewChannel: true
-                }
-            );
-
-            return message.reply(
-                "✅ Verification refreshed."
             );
         }
 
@@ -154,42 +86,6 @@ Emoji: ${data.emoji_name}`
                     "Usage: !verification setup #channel @role emoji"
                 );
             }
-
-            const everyone =
-                message.guild.roles.everyone;
-
-            for (const [, guildChannel] of message.guild.channels.cache) {
-
-                if (
-                    guildChannel.id === channel.id
-                ) continue;
-
-                try {
-
-                    await guildChannel.permissionOverwrites.edit(
-                        everyone,
-                        {
-                            ViewChannel: false
-                        }
-                    );
-
-                    await guildChannel.permissionOverwrites.edit(
-                        role,
-                        {
-                            ViewChannel: true
-                        }
-                    );
-
-                } catch {}
-            }
-
-            await channel.permissionOverwrites.edit(
-                everyone,
-                {
-                    ViewChannel: true,
-                    SendMessages: false
-                }
-            );
 
             const verifyMessage =
                 await channel.send({
@@ -232,18 +128,10 @@ Emoji: ${data.emoji_name}`
                     emoji
                 ]
             );
-            client.verificationData = {
-              guild_id: message.guild.id,
-              channel_id: channel.id,
-              role_id: role.id,
-              message_id: verificationMessage.id,
-              emoji_id: emoji.id || null,
-              emoji_name: emoji.name
-             };
+
             return message.reply(
                 "✅ Verification configured."
             );
         }
-
     }
 };
