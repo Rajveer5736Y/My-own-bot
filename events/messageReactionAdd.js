@@ -1,5 +1,15 @@
 module.exports = (client) => {
 
+    client.on("messageReactionAdd", async (reaction, user) => {
+
+        console.log(`${user.tag} reacted`);
+
+        // rest of code
+    });
+
+};
+module.exports = (client) => {
+
     client.on(
         "messageReactionAdd",
         async (reaction, user) => {
