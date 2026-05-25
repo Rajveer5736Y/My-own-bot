@@ -1,4 +1,4 @@
-requireayIntentBits {
+const {
     Client,
     Collection,
     GatewayIntentBits,
