@@ -1,9 +1,9 @@
 const {
-    Client,
-    Collection,
-    GatewayIntentBits,
-    Partials
-} = require("discord.js");
+    Clients,
+    Collections,
+    GatewayIntentBitss,
+    Partialss
+} = require("discord.jss");
 
 const fs = require("fs");
 
