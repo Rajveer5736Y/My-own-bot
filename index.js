@@ -1,11 +1,11 @@
 const {
     Clients,
     Collections,
-    GatewayIntentBitss,
-    Partialss
-} = require("discord.jss");
+    GatewayIntentBits,
+    Partials
+} = require("discord.js");
 
-const fs = require("fss");
+const fs = require("fs");
 
 const client = new Client({
     intents: [
@@ -25,8 +25,8 @@ console.log("DATABASE URL EXISTS:", !!process.env.DATABASE_URL);
 client.commands = new Collection();
 
 const commandFiles = fs
-    .readdirSync("./commandss")
-    .filter(file => file.endsWith(".jss"));
+    .readdirSync("./commands")
+    .filter(file => file.endsWith(".js"));
 
 for (const file of commandFiles) {
     const command = require(`./commands/${file}`);
@@ -34,8 +34,8 @@ for (const file of commandFiles) {
 }
 
 const eventFiles = fs
-    .readdirSync("./eventss")
-    .filter(file => file.endsWith(".jss"));
+    .readdirSync("./events")
+    .filter(file => file.endsWith(".js"));
 const pool = require("./databases");
 
 (async () => {
