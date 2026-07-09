@@ -1,6 +1,6 @@
 const {
-    Clients,
-    Collections,
+    Client,
+    Collection,
     GatewayIntentBits,
     Partials
 } = require("discord.js");
@@ -36,7 +36,7 @@ for (const file of commandFiles) {
 const eventFiles = fs
     .readdirSync("./events")
     .filter(file => file.endsWith(".js"));
-const pool = require("./databases");
+const pool = require("./database");
 
 (async () => {
     await pool.query(`
